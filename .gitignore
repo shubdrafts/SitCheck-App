@@ -1,0 +1,83 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code related
+.vscode/
+# .vscode/launch.json # Uncomment if you want to include launch configurations
+
+# Flutter/Dart/Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Android related
+**/android/.gradle
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/android/**/generated/
+**/android/**/intermediates/
+**/android/**/tmp/
+**/android/**/outputs/
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# Editor/IDE related
+.cursor/
+
+
+# iOS/macOS related
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+**/macos/Flutter/ephemeral/
+
+# Windows related
+**/windows/flutter/ephemeral/
+
+# Linux related
+**/linux/flutter/ephemeral/
+
+# Web related
+lib/generated_plugin_registrant.dart
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Sensitive Files & Environment Variables
+.env
+*.env
+.env.*
+env/
+google-services.json
+GoogleService-Info.plist
