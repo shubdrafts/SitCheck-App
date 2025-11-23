@@ -133,14 +133,30 @@ class BookingService {
       final now = DateTime.now();
       final today = _dateFormatter.format(now);
       
-      final response = await _client
-          .from('bookings')
+      // Try fetching from main table first (works for owners)
+      try {
+        final response = await _client
+            .from('bookings')
+            .select()
+            .eq('restaurant_id', restaurantId)
+            .eq('booking_date', today)
+            .inFilter('status', ['confirmed', 'reserved', 'occupied', 'checkedIn']);
+        
+        if ((response as List).isNotEmpty) {
+          return (response).map((row) => _mapToOwnerBooking(row)).toList();
+        }
+      } catch (_) {
+        // Ignore error and fall back to public view
+      }
+
+      // Fallback to public_bookings view (works for everyone)
+      final publicResponse = await _client
+          .from('public_bookings')
           .select()
           .eq('restaurant_id', restaurantId)
-          .eq('booking_date', today)
-          .inFilter('status', ['confirmed', 'reserved', 'occupied', 'checkedIn']);
+          .eq('booking_date', today);
 
-      return (response as List).map((row) => _mapToOwnerBooking(row)).toList();
+      return (publicResponse as List).map((row) => _mapToOwnerBooking(row)).toList();
     } catch (e) {
       debugPrint('BookingService: Failed to fetch active bookings: $e');
       return [];
@@ -158,7 +174,7 @@ class BookingService {
       id: row['id'].toString(),
       guestName: row['guest_name'] as String? ?? 'Guest',
       partySize: (row['guest_count'] as int?) ?? 1,
-      tableLabel: row['table_id'] as String? ?? '',
+      tableLabel: (row['table_label'] ?? row['table_id'] ?? '') as String,
       time: timestamp,
       status: _bookingStatusFromString(row['status'] as String? ?? 'pending'),
       guestPhone: row['guest_phone'] as String?,
@@ -176,6 +192,8 @@ class BookingService {
         return BookingStatus.checkedIn;
       case 'cancelled':
         return BookingStatus.cancelled;
+      case 'completed':
+        return BookingStatus.completed;
       default:
         return BookingStatus.pending;
     }

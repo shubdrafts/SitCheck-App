@@ -1,4 +1,4 @@
-enum BookingStatus { pending, confirmed, checkedIn, cancelled }
+enum BookingStatus { pending, confirmed, checkedIn, cancelled, completed }
 
 class OwnerBooking {
   const OwnerBooking({

@@ -108,6 +108,8 @@ class _HistoryBookingCard extends StatelessWidget {
         return AppColors.red;
       case BookingStatus.checkedIn:
         return AppColors.softBlue;
+      case BookingStatus.completed:
+        return Colors.grey;
     }
   }
 

@@ -63,9 +63,78 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     }
   }
 
-  void _handleTableChange(List<TableSlot> updated) {
+  void _handleTableChange(List<TableSlot> updated) async {
     final restaurant = _currentRestaurant();
-    context.read<RestaurantController>().updateTables(restaurant.id, updated);
+    final controller = context.read<RestaurantController>();
+    
+    // Find which table changed
+    final oldTables = restaurant.tables;
+    TableSlot? changedTable;
+    for (int i = 0; i < updated.length; i++) {
+      if (updated[i].status != oldTables[i].status) {
+        changedTable = updated[i];
+        break;
+      }
+    }
+
+    if (changedTable != null) {
+      // Check if there is an active booking for this table
+      final now = DateTime.now();
+      final activeBooking = _bookings.firstWhere(
+        (b) {
+          if (b.status != BookingStatus.confirmed && b.status != BookingStatus.checkedIn) return false;
+          if (b.tableLabel != changedTable!.label && b.tableLabel != changedTable.id) return false;
+          final diff = b.time.difference(now).inMinutes;
+          return diff >= -120 && diff <= 120;
+        },
+        orElse: () => OwnerBooking(
+          id: '',
+          guestName: '',
+          partySize: 0,
+          tableLabel: '',
+          time: DateTime.now(),
+          status: BookingStatus.pending,
+        ),
+      );
+
+      if (activeBooking.id.isNotEmpty) {
+        // If owner tries to make it available/reserved but it's occupied by booking
+        // We need to resolve the booking first
+        final shouldResolve = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Active Booking'),
+            content: Text(
+              'Table ${changedTable!.label} has an active booking for ${activeBooking.guestName}. '
+              'Do you want to complete this booking to free up the table?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Complete Booking'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldResolve == true) {
+          await _bookingService.updateBookingStatus(activeBooking.id, BookingStatus.completed);
+          await _loadBookings();
+          // Proceed with update
+          controller.updateTables(restaurant.id, updated);
+        } else {
+          // Revert change locally (UI will rebuild with old state)
+          setState(() {});
+        }
+        return;
+      }
+    }
+
+    controller.updateTables(restaurant.id, updated);
   }
 
   Restaurant _currentRestaurant() {
